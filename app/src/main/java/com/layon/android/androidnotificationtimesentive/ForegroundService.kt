@@ -6,11 +6,22 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.os.Build
+import android.os.Build.VERSION
+import android.os.Build.VERSION_CODES
 import android.os.IBinder
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.style.ForegroundColorSpan
+import android.util.Log
 import android.widget.Toast
+import androidx.annotation.ColorRes
+import androidx.annotation.StringRes
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.res.TypedArrayUtils.getText
+
 
 class ForegroundService : Service() {
 
@@ -23,15 +34,18 @@ class ForegroundService : Service() {
             val startIntent = Intent(context, ForegroundService::class.java)
             Toast.makeText(context, message, Toast.LENGTH_LONG).show()
             ContextCompat.startForegroundService(context, startIntent)
+            Log.d("layonf", "startService")
         }
         fun stopService(context: Context, message: String) {
             val stopIntent = Intent(context, ForegroundService::class.java)
             Toast.makeText(context, message, Toast.LENGTH_LONG).show()
             context.stopService(stopIntent)
+            Log.d("layonf", "stopService")
         }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, start: Int): Int {
+        Log.d("layonf", "onStartCommand")
         //Do heavy work on a background thread
         createNotificationChannel()
         return postNotification()
@@ -52,17 +66,38 @@ class ForegroundService : Service() {
     }
 
     private fun postNotification(): Int {
-        val notificationIntent = Intent(this, MainActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0)
+        Log.d("layonf", "postNotification")
+
+        //create the fullScreen Intents
+        val fullScreenIntent = Intent(this, FullScreenActivity::class.java)
+        val fullScreenPendingIntent = PendingIntent.getActivity(this, 0,
+            fullScreenIntent, PendingIntent.FLAG_UPDATE_CURRENT)
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Time-Sentive Notification")
             .setContentText("An example of how to show an Android time-sentive notification in kotlin")
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentIntent(pendingIntent)
+            .setSmallIcon(R.drawable.ic_baseline_new_releases_24)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_CALL)
+            .addAction(R.drawable.ic_baseline_phone_enabled_24,
+                getActionText("Action1", Color.RED), null)
+            .addAction(R.drawable.ic_baseline_phone_disabled_24,
+                getActionText("Action2", Color.GREEN), null)
+            .setFullScreenIntent(fullScreenPendingIntent, true)
             .build()
 
         startForeground(NOTIFICATION_ID, notification)
         return START_NOT_STICKY
+    }
+
+    //this method return a spannable the set background color on action button name
+    private fun getActionText(string : String, color : Int): Spannable? {
+        val spannable: Spannable = SpannableString(string)
+        if (VERSION.SDK_INT >= VERSION_CODES.N_MR1) {
+            spannable.setSpan(
+                ForegroundColorSpan(color), 0, spannable.length, 0
+            )
+        }
+        return spannable
     }
 }
