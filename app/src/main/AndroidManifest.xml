@@ -12,7 +12,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".FullScreenActivity"></activity>
+        <activity android:name=".FullScreenActivity"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
 
         <service android:name=".ForegroundService"></service>
 
