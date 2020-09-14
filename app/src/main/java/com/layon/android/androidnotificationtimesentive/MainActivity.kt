@@ -10,10 +10,21 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        //enabled the marquee
         textView.setSelected(true)
 
         buttonPost.setOnClickListener(View.OnClickListener {
-            ForegroundService.startService(this, "Foreground Service is running...")
+            //need play sound?
+            var playsound = if(checkBox_play_sound.isChecked) true else false
+
+            //need vibrate?
+            var vibrate = if(checkBox_vibrate.isChecked) true else false
+
+            //need vibrate?
+            var delay = if(checkBox_delay.isChecked) 5000 else 0
+
+            ForegroundService.startService(this, "Foreground Service is running...",
+            playsound, vibrate, delay)
         })
         buttonCancel.setOnClickListener(View.OnClickListener {
             ForegroundService.stopService(this, "Foreground Service is stopping...")

@@ -7,34 +7,41 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
-import android.os.Build
+import android.media.MediaPlayer
+import android.os.*
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
-import android.os.IBinder
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
 import android.util.Log
 import android.widget.Toast
-import androidx.annotation.ColorRes
-import androidx.annotation.StringRes
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
-import androidx.core.content.res.TypedArrayUtils.getText
+import androidx.core.content.ContextCompat.getSystemService
+import androidx.core.os.postDelayed
 
 
 class ForegroundService : Service() {
 
     private val CHANNEL_ID = "Time-Sentive Notification in Kotlin"
     private val NOTIFICATION_ID = 1
+    private var mediaPlayer: MediaPlayer? = null
+    private var vibrator: Vibrator? = null
 
     //function to start and stop the foregroundservice
     companion object {
-        fun startService(context: Context, message: String) {
-            val startIntent = Intent(context, ForegroundService::class.java)
-            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-            ContextCompat.startForegroundService(context, startIntent)
-            Log.d("layonf", "startService")
+        fun startService(context: Context, message: String, playsound: Boolean, vibrate: Boolean,
+        delay: Int) {
+            //startService with a delay
+            Handler(Looper.getMainLooper()).postDelayed({
+                val startIntent = Intent(context, ForegroundService::class.java)
+                startIntent.putExtra("playsound", playsound)
+                startIntent.putExtra("vibrate", vibrate)
+                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                ContextCompat.startForegroundService(context, startIntent)
+                Log.d("layonf", "startService")
+            }, delay.toLong()) // 5s
         }
         fun stopService(context: Context, message: String) {
             val stopIntent = Intent(context, ForegroundService::class.java)
@@ -44,13 +51,64 @@ class ForegroundService : Service() {
         }
     }
 
+    override fun onCreate() {
+        super.onCreate()
+        //get media player
+        mediaPlayer = MediaPlayer.create(this, R.raw.shapeofyou)
+        mediaPlayer?.setOnPreparedListener {
+            println("PLAY")
+        }
+        //get vibrator
+        vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+    }
+
+    fun playsound(play: Boolean){
+        Log.d("layonf", "playsound")
+        mediaPlayer?.setLooping(true)
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, start: Int): Int {
         Log.d("layonf", "onStartCommand")
         //Do heavy work on a background thread
+
+        //need play sound?
+        val playsound = intent?.getBooleanExtra("playsound", false)
+        if(playsound!!) {
+            Log.d("layonf", "play")
+            mediaPlayer?.setLooping(true)
+            mediaPlayer?.start()
+        }
+
+        //need vibrate?
+        val vibrate = intent?.getBooleanExtra("vibrate", false)
+        if(vibrate!!) {
+            Log.d("layonf", "vibrate")
+            
+            if (Build.VERSION.SDK_INT >= 26) {
+                vibrator?.vibrate(VibrationEffect.createWaveform(
+                    longArrayOf(1500L, 800L, 800L), 0))
+            } else {
+                vibrator?.vibrate(5000)
+            }
+        }
+
+        //create channel
         createNotificationChannel()
+
+        //return the postNotification to finish
         return postNotification()
 
     }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d("layonf", "onDestroy")
+        //stop the play if need
+        mediaPlayer?.stop()
+        //stop the vibrate if need
+        vibrator?.cancel()
+    }
+
 
     override fun onBind(intent: Intent): IBinder? {
         return null
