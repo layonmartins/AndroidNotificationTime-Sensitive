@@ -22,9 +22,11 @@ The Android may choose to display a heads-up notification, instead of launching 
 ![](notificationGIFF.gif)
 
 ## Permissions:
-* <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-* <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
-* <uses-permission android:name="android.permission.VIBRATE" />
+```
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+<uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+<uses-permission android:name="android.permission.VIBRATE" />
+```
 
 ## References:
 https://developer.android.com/training/notify-user/build-notification
